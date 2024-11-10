@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import aioinject
 from starlette.types import ASGIApp
 
-
 _jwt_private_key = """-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQCFnu5QVffnlErf8Egsyat0YVMnwE6r8IRmsOxKKrR5yWGiNmSk
 AQVG3RbnSMeDQw1PbGrNXC6TAkENRetwFFoG87is0wYxpDovlxhFXa8k92ofoHPI
@@ -128,7 +127,7 @@ def public_api_app() -> ASGIApp:
 
 def internal_api_app() -> ASGIApp:
     from pisaka.internal_api import create_app
-    from pisaka.internal_api.authentication import JWTAuthentication, JWTAuthenticationOptions
+    from pisaka.internal_api.authentication import JWTAuthenticationOptions
 
     def _create_jwt_authentication_options(config: Config) -> JWTAuthenticationOptions:
         return JWTAuthenticationOptions(
@@ -141,7 +140,6 @@ def internal_api_app() -> ASGIApp:
 
     container = _create_di_container()
     container.register(aioinject.Singleton(_create_jwt_authentication_options))
-    container.register(aioinject.Scoped(JWTAuthentication))
     return create_app(container=container)
 
 
@@ -157,15 +155,16 @@ def init_db() -> None:
 
 
 def create_jwt_token() -> None:
-    import jwt
-    from uuid import uuid4
     from datetime import datetime, timedelta
+    from uuid import uuid4
+
+    import jwt
 
     container = _create_di_container()
     with container.sync_context() as ctx:
         config = ctx.resolve(Config)
         user_id = str(uuid4())
-        now = datetime.now()
+        now = datetime.now()  # noqa: DTZ005
 
         encoded: str = jwt.encode(
             payload={
@@ -185,15 +184,16 @@ def create_jwt_token() -> None:
             key=config.jwt_private_key,
             algorithm=config.jwt_algorithm,
         )
-        print(encoded)
+        print(encoded)  # noqa: T201
 
 
 if __name__ == "__main__":
     import sys
+
     match sys.argv[1]:
         case "init_db":
             init_db()
         case "jwt":
             create_jwt_token()
         case _:
-            print("Unknown command")
+            print("Unknown command")  # noqa: T201

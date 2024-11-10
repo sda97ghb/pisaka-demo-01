@@ -4,8 +4,7 @@ from typing import NewType
 
 import aioinject
 from aioinject.ext.fastapi import AioInjectMiddleware
-from fastapi import FastAPI, Depends
-from fastapi.security import APIKeyHeader
+from fastapi import FastAPI
 
 InternalAPIApp = NewType("InternalAPIApp", FastAPI)
 

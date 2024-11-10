@@ -48,8 +48,4 @@ class ClaimsIdentity:
         return None
 
     def find_all(self, claim_type: type[ClaimT]) -> list[ClaimT]:
-        return [
-            claim
-            for claim in self.claims
-            if isinstance(claim, claim_type)
-        ]
+        return [claim for claim in self.claims if isinstance(claim, claim_type)]

@@ -1,44 +1,25 @@
 from dataclasses import dataclass
-from datetime import timedelta, datetime
-from typing import Annotated, Any
-from uuid import uuid4
+from datetime import timedelta
+from typing import Annotated
 
 import jwt
 from aioinject import Inject
 from aioinject.ext.fastapi import inject
-from fastapi import Depends, Request, HTTPException
-from fastapi.openapi.models import APIKey, APIKeyIn
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastapi.security.base import SecurityBase
-from jwt import InvalidIssuerError, PyJWTError
+from jwt import PyJWTError
 from pydantic import BaseModel, ValidationError
 from starlette import status
 
-from security.claims import ClaimsIdentity, UserIdClaim, UsernameClaim, EmailClaim, \
-    FirstNameClaim, LastNameClaim
-
-
-"""
-# try:
-#     decoded = jwt.decode(
-#         jwt=encoded,
-#         key=public_key,
-#         algorithms=["RS256"],
-#         options={
-#             "verify_signature": True,
-#             "require": ["aud", "exp", "iss", "sub"],
-#             "verify_aud": True,
-#             "verify_exp": True,
-#             "verify_iss": True,
-#         },
-#         verify=True,
-#         audience=audience,
-#         issuer=issuer,
-#         leeway=timedelta(seconds=60),
-#     )
-# except PyJWTError as err:
-#     print(f"invalid token, not authenticated: {err}")
-"""
+from security.claims import (
+    Claim,
+    ClaimsIdentity,
+    EmailClaim,
+    FirstNameClaim,
+    LastNameClaim,
+    UserIdClaim,
+    UsernameClaim,
+)
 
 
 class AuthenticationError(HTTPException):
@@ -58,7 +39,7 @@ class JWTAuthenticationOptions:
     leeway_sec: int = 60
 
 
-class JWTClaimsSchema(BaseModel):
+class _JWTClaimsSchema(BaseModel):
     sub: str
     username: str | None
     email: str | None
@@ -66,65 +47,48 @@ class JWTClaimsSchema(BaseModel):
     family_name: str | None
 
 
-class JWTAuthentication:
-    def __init__(self, options: JWTAuthenticationOptions) -> None:
-        self._options = options
-
-    async def authenticate(self, token: str) -> ClaimsIdentity:
-        try:
-            jwt_claims = JWTClaimsSchema.model_validate(
-                jwt.decode(
-                    jwt=token,
-                    key=self._options.public_key,
-                    algorithms=[self._options.algorithm],
-                    options={
-                        "verify_signature": True,
-                        "require": ["aud", "exp", "iss", "sub"],
-                        "verify_aud": True,
-                        "verify_exp": True,
-                        "verify_iss": True,
-                    },
-                    verify=True,
-                    audience=self._options.audience,
-                    issuer=self._options.issuer,
-                    leeway=timedelta(seconds=self._options.leeway_sec),
-                )
-            )
-        except (PyJWTError | ValidationError) as err:
-            raise AuthenticationError("Invalid JWT") from err
-        return self._build_identity(jwt_claims)
-
-    def _build_identity(self, jwt_claims: JWTClaimsSchema) -> ClaimsIdentity:
-        issuer = self._options.issuer
-        identity_claims = [
-            UserIdClaim(issuer=issuer, user_id=jwt_claims.sub),
-        ]
-        if username := jwt_claims.username:
-            identity_claims.append(UsernameClaim(issuer=issuer, username=username))
-        if email := jwt_claims.email:
-            identity_claims.append(EmailClaim(issuer=issuer, email=email))
-        if first_name := jwt_claims.given_name:
-            identity_claims.append(FirstNameClaim(issuer=issuer, first_name=first_name))
-        if last_name := jwt_claims.family_name:
-            identity_claims.append(LastNameClaim(issuer=issuer, last_name=last_name))
-        return ClaimsIdentity(claims=identity_claims)
-
-
-@inject
-async def authenticate_principal(
-    auth: Annotated[JWTAuthentication, Inject],
-    http_cred: HTTPAuthorizationCredentials = Depends(
-        HTTPBearer(
-            bearerFormat="JWT",
-            scheme_name="HTTPBearerJWT",
-            description="JWT in HTTP header Authorization with Bearer scheme",
+async def _validate_jwt_or_raise_authentication_error(
+    token: str,
+    options: JWTAuthenticationOptions,
+) -> _JWTClaimsSchema:
+    try:
+        return _JWTClaimsSchema.model_validate(
+            jwt.decode(
+                jwt=token,
+                key=options.public_key,
+                algorithms=[options.algorithm],
+                options={
+                    "verify_signature": True,
+                    "require": ["aud", "exp", "iss", "sub"],
+                    "verify_aud": True,
+                    "verify_exp": True,
+                    "verify_iss": True,
+                },
+                verify=True,
+                audience=options.audience,
+                issuer=options.issuer,
+                leeway=timedelta(seconds=options.leeway_sec),
+            ),
         )
-    ),
-) -> ClaimsIdentity:
-    print("APIKEY:", http_cred)
-    principal = await auth.authenticate(http_cred.credentials)
-    print("Principal:", principal)
-    return principal
+    except PyJWTError as err:
+        raise AuthenticationError("Invalid JWT") from err
+    except ValidationError as err:
+        raise AuthenticationError("Invalid JWT") from err
+
+
+def _build_identity(issuer: str, jwt_claims: _JWTClaimsSchema) -> ClaimsIdentity:
+    identity_claims: list[Claim] = [
+        UserIdClaim(issuer=issuer, user_id=jwt_claims.sub),
+    ]
+    if username := jwt_claims.username:
+        identity_claims.append(UsernameClaim(issuer=issuer, username=username))
+    if email := jwt_claims.email:
+        identity_claims.append(EmailClaim(issuer=issuer, email=email))
+    if first_name := jwt_claims.given_name:
+        identity_claims.append(FirstNameClaim(issuer=issuer, first_name=first_name))
+    if last_name := jwt_claims.family_name:
+        identity_claims.append(LastNameClaim(issuer=issuer, last_name=last_name))
+    return ClaimsIdentity(claims=identity_claims)
 
 
 @dataclass
@@ -134,21 +98,24 @@ class AuthenticationResult:
 
 @inject
 async def _authenticate(
-    auth: Annotated[JWTAuthentication, Inject],
-    http_cred: HTTPAuthorizationCredentials = Depends(
-        HTTPBearer(
-            bearerFormat="JWT",
-            scheme_name="HTTPBearerJWT",
-            description="JWT in HTTP header Authorization with Bearer scheme",
-        )
-    ),
+    http_cred: Annotated[
+        HTTPAuthorizationCredentials,
+        Depends(
+            HTTPBearer(
+                bearerFormat="JWT",
+                scheme_name="HTTPBearerJWT",
+                description="JWT in HTTP header Authorization with Bearer scheme",
+            ),
+        ),
+    ],
+    jwt_auth_opt: Annotated[JWTAuthenticationOptions, Inject],
 ) -> AuthenticationResult:
-    print("APIKEY:", http_cred)
-    principal = await auth.authenticate(http_cred.credentials)
-    print("Principal:", principal)
+    jwt_claims = await _validate_jwt_or_raise_authentication_error(
+        token=http_cred.credentials,
+        options=jwt_auth_opt,
+    )
+    principal = _build_identity(issuer=jwt_auth_opt.issuer, jwt_claims=jwt_claims)
     return AuthenticationResult(principal=principal)
 
 
 Authentication = Annotated[AuthenticationResult, Depends(_authenticate)]
-
-# principal: Annotated[ClaimsIdentity, Depends(authenticate)]
