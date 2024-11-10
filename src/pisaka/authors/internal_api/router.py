@@ -3,7 +3,8 @@ from uuid import UUID
 
 from aioinject import Inject
 from aioinject.ext.fastapi import inject
-from fastapi import APIRouter, Body, Path
+from fastapi import APIRouter, Body, Path, Request, Depends
+from fastapi.security import APIKeyHeader, HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +18,9 @@ from pisaka.authors.commands import (
 from pisaka.authors.ids import AuthorId
 from pisaka.authors.models import AuthorModel
 from pisaka.authors.services import DefaultAuthorService
+from pisaka.internal_api.authentication import JWTAuthentication, Authentication
 from pisaka.platform.api import BaseSchema
+from security.claims import ClaimsIdentity
 
 router = APIRouter(
     prefix="/authors",
@@ -39,7 +42,14 @@ class AuthorsListSchema(BaseSchema):
 @inject
 async def get_authors_list(
     session: Annotated[AsyncSession, Inject],
+    # auth: Annotated[JWTAuthentication, Inject],
+    # key: HTTPAuthorizationCredentials = Depends(HTTPBearer(bearerFormat="JWT")),
+    # principal: Annotated[ClaimsIdentity, Depends(auth)]
+    auth: Authentication,
 ) -> AuthorsListSchema:
+    # print("APIKEY:", key)
+    # principal = await auth.authenticate(key.credentials)
+    print("Principal 2:", auth.principal)
     result = await session.execute(select(AuthorModel))
     return AuthorsListSchema(
         authors=[
