@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Annotated
+from uuid import UUID
 
 import jwt
 from aioinject import Inject
@@ -11,32 +12,13 @@ from jwt import PyJWTError
 from pydantic import BaseModel, ValidationError
 from starlette import status
 
-from security.claims import (
-    Claim,
-    ClaimsIdentity,
-    EmailClaim,
-    FirstNameClaim,
-    LastNameClaim,
-    UserIdClaim,
-    UsernameClaim,
-)
-
-
-@dataclass(kw_only=True)
-class JWTAuthenticationOptions:
-    public_key: str
-    audience: str
-    issuer: str
-    algorithm: str = "RS256"
-    leeway_sec: int = 60
+from security.authentication import JWTAuthenticationOptions
+from security.claims import Claim, ClaimsIdentity, EmailClaim, UserIdClaim
 
 
 class _JWTClaimsSchema(BaseModel):
     sub: str
-    username: str | None
     email: str | None
-    given_name: str | None
-    family_name: str | None
 
 
 @dataclass
@@ -85,16 +67,10 @@ async def _authenticate(
 
     issuer = jwt_auth_opt.issuer
     identity_claims: list[Claim] = [
-        UserIdClaim(issuer=issuer, user_id=jwt_claims.sub),
+        UserIdClaim(issuer=issuer, user_id=UUID(jwt_claims.sub)),
     ]
-    if username := jwt_claims.username:
-        identity_claims.append(UsernameClaim(issuer=issuer, username=username))
     if email := jwt_claims.email:
         identity_claims.append(EmailClaim(issuer=issuer, email=email))
-    if first_name := jwt_claims.given_name:
-        identity_claims.append(FirstNameClaim(issuer=issuer, first_name=first_name))
-    if last_name := jwt_claims.family_name:
-        identity_claims.append(LastNameClaim(issuer=issuer, last_name=last_name))
     principal = ClaimsIdentity(claims=identity_claims)
 
     return AuthenticationResult(principal=principal)

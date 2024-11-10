@@ -17,7 +17,7 @@ from pisaka.authors.commands import (
 from pisaka.authors.ids import AuthorId
 from pisaka.authors.models import AuthorModel
 from pisaka.authors.services import DefaultAuthorService
-from pisaka.internal_api.authentication import Authentication
+from pisaka.internal_api_lib.authentication import Authentication
 from pisaka.platform.api import BaseSchema
 
 router = APIRouter(
@@ -40,9 +40,9 @@ class AuthorsListSchema(BaseSchema):
 @inject
 async def get_authors_list(
     session: Annotated[AsyncSession, Inject],
-    auth: Authentication,
+    authentication: Authentication,
 ) -> AuthorsListSchema:
-    print("Principal:", auth.principal)  # noqa: T201
+    print("Principal:", authentication.principal)  # noqa: T201
     result = await session.execute(select(AuthorModel))
     return AuthorsListSchema(
         authors=[

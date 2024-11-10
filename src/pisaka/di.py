@@ -34,12 +34,18 @@ class Config:
     db_url_sync: str
     db_url_async: str
     db_echo: bool
-    jwt_private_key: str
-    jwt_public_key: str
-    jwt_audience: str
-    jwt_issuer: str
-    jwt_algorithm: str
-    jwt_leeway_sec: int
+    api__jwt_private_key: str
+    api__jwt_public_key: str
+    api__jwt_audience: str
+    api__jwt_issuer: str
+    api__jwt_algorithm: str
+    api__jwt_leeway_sec: int
+    internal_api__jwt_private_key: str
+    internal_api__jwt_public_key: str
+    internal_api__jwt_audience: str
+    internal_api__jwt_issuer: str
+    internal_api__jwt_algorithm: str
+    internal_api__jwt_leeway_sec: int
 
 
 def _create_di_container() -> aioinject.Container:
@@ -51,12 +57,18 @@ def _create_di_container() -> aioinject.Container:
                 db_url_sync="sqlite:///db.sqlite",
                 db_url_async="sqlite+aiosqlite:///db.sqlite",
                 db_echo=True,
-                jwt_private_key=_jwt_private_key,
-                jwt_public_key=_jwt_public_key,
-                jwt_audience="pisaka-backend",
-                jwt_issuer="https://my-sso-instance/realm/our-dudes",
-                jwt_algorithm="RS256",
-                jwt_leeway_sec=60,
+                api__jwt_private_key=_jwt_private_key,
+                api__jwt_public_key=_jwt_public_key,
+                api__jwt_audience="pisaka-backend",
+                api__jwt_issuer="https://my-sso-instance/realm/our-dudes",
+                api__jwt_algorithm="RS256",
+                api__jwt_leeway_sec=60,
+                internal_api__jwt_private_key=_jwt_private_key,
+                internal_api__jwt_public_key=_jwt_public_key,
+                internal_api__jwt_audience="pisaka-backend",
+                internal_api__jwt_issuer="https://my-sso-instance/realm/our-dudes",
+                internal_api__jwt_algorithm="RS256",
+                internal_api__jwt_leeway_sec=60,
             ),
         ),
     )
@@ -120,22 +132,33 @@ def _register_authors(container: aioinject.Container) -> None:
 
 def public_api_app() -> ASGIApp:
     from pisaka.api import create_app
+    from security.authentication import JWTAuthenticationOptions
+
+    def _create_jwt_authentication_options(config: Config) -> JWTAuthenticationOptions:
+        return JWTAuthenticationOptions(
+            public_key=config.api__jwt_public_key,
+            audience=config.api__jwt_audience,
+            issuer=config.api__jwt_issuer,
+            algorithm=config.api__jwt_algorithm,
+            leeway_sec=config.api__jwt_leeway_sec,
+        )
 
     container = _create_di_container()
+    container.register(aioinject.Singleton(_create_jwt_authentication_options))
     return create_app(container=container)
 
 
 def internal_api_app() -> ASGIApp:
     from pisaka.internal_api import create_app
-    from pisaka.internal_api.authentication import JWTAuthenticationOptions
+    from security.authentication import JWTAuthenticationOptions
 
     def _create_jwt_authentication_options(config: Config) -> JWTAuthenticationOptions:
         return JWTAuthenticationOptions(
-            public_key=config.jwt_public_key,
-            audience=config.jwt_audience,
-            issuer=config.jwt_issuer,
-            algorithm=config.jwt_algorithm,
-            leeway_sec=config.jwt_leeway_sec,
+            public_key=config.internal_api__jwt_public_key,
+            audience=config.internal_api__jwt_audience,
+            issuer=config.internal_api__jwt_issuer,
+            algorithm=config.internal_api__jwt_algorithm,
+            leeway_sec=config.internal_api__jwt_leeway_sec,
         )
 
     container = _create_di_container()
@@ -169,20 +192,20 @@ def create_jwt_token() -> None:
         encoded: str = jwt.encode(
             payload={
                 "jti": str(uuid4()),
-                "iss": config.jwt_issuer,
+                "iss": config.internal_api__jwt_issuer,
                 "sub": user_id,
                 "iat": now.timestamp(),
                 "nbf": now.timestamp(),
                 "exp": (now + timedelta(minutes=30)).timestamp(),
-                "aud": [config.jwt_audience],
+                "aud": [config.internal_api__jwt_audience],
                 "azp": "pisaka-frontend",
                 "username": "j.doe",
                 "email": "j.doe@mail.com",
                 "given_name": "John",
                 "family_name": "Doe",
             },
-            key=config.jwt_private_key,
-            algorithm=config.jwt_algorithm,
+            key=config.internal_api__jwt_private_key,
+            algorithm=config.internal_api__jwt_algorithm,
         )
         print(encoded)  # noqa: T201
 

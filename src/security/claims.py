@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import TypeVar
+from uuid import UUID
 
 ISSUER_LOCAL_AUTHORITY = "LOCAL AUTHORITY"
 
@@ -11,7 +12,7 @@ class Claim:
 
 @dataclass(frozen=True, kw_only=True)
 class UserIdClaim(Claim):
-    user_id: str
+    user_id: UUID
 
 
 @dataclass(frozen=True, kw_only=True)
