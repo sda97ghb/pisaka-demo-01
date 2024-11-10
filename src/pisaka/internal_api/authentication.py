@@ -22,14 +22,6 @@ from security.claims import (
 )
 
 
-class AuthenticationError(HTTPException):
-    def __init__(self, reason: str) -> None:
-        super().__init__(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=reason,
-        )
-
-
 @dataclass(kw_only=True)
 class JWTAuthenticationOptions:
     public_key: str
@@ -45,50 +37,6 @@ class _JWTClaimsSchema(BaseModel):
     email: str | None
     given_name: str | None
     family_name: str | None
-
-
-async def _validate_jwt_or_raise_authentication_error(
-    token: str,
-    options: JWTAuthenticationOptions,
-) -> _JWTClaimsSchema:
-    try:
-        return _JWTClaimsSchema.model_validate(
-            jwt.decode(
-                jwt=token,
-                key=options.public_key,
-                algorithms=[options.algorithm],
-                options={
-                    "verify_signature": True,
-                    "require": ["aud", "exp", "iss", "sub"],
-                    "verify_aud": True,
-                    "verify_exp": True,
-                    "verify_iss": True,
-                },
-                verify=True,
-                audience=options.audience,
-                issuer=options.issuer,
-                leeway=timedelta(seconds=options.leeway_sec),
-            ),
-        )
-    except PyJWTError as err:
-        raise AuthenticationError("Invalid JWT") from err
-    except ValidationError as err:
-        raise AuthenticationError("Invalid JWT") from err
-
-
-def _build_identity(issuer: str, jwt_claims: _JWTClaimsSchema) -> ClaimsIdentity:
-    identity_claims: list[Claim] = [
-        UserIdClaim(issuer=issuer, user_id=jwt_claims.sub),
-    ]
-    if username := jwt_claims.username:
-        identity_claims.append(UsernameClaim(issuer=issuer, username=username))
-    if email := jwt_claims.email:
-        identity_claims.append(EmailClaim(issuer=issuer, email=email))
-    if first_name := jwt_claims.given_name:
-        identity_claims.append(FirstNameClaim(issuer=issuer, first_name=first_name))
-    if last_name := jwt_claims.family_name:
-        identity_claims.append(LastNameClaim(issuer=issuer, last_name=last_name))
-    return ClaimsIdentity(claims=identity_claims)
 
 
 @dataclass
@@ -110,11 +58,45 @@ async def _authenticate(
     ],
     jwt_auth_opt: Annotated[JWTAuthenticationOptions, Inject],
 ) -> AuthenticationResult:
-    jwt_claims = await _validate_jwt_or_raise_authentication_error(
-        token=http_cred.credentials,
-        options=jwt_auth_opt,
-    )
-    principal = _build_identity(issuer=jwt_auth_opt.issuer, jwt_claims=jwt_claims)
+    try:
+        jwt_claims = _JWTClaimsSchema.model_validate(
+            jwt.decode(
+                jwt=http_cred.credentials,
+                key=jwt_auth_opt.public_key,
+                algorithms=[jwt_auth_opt.algorithm],
+                options={
+                    "verify_signature": True,
+                    "require": ["aud", "exp", "iss", "sub"],
+                    "verify_aud": True,
+                    "verify_exp": True,
+                    "verify_iss": True,
+                },
+                verify=True,
+                audience=jwt_auth_opt.audience,
+                issuer=jwt_auth_opt.issuer,
+                leeway=timedelta(seconds=jwt_auth_opt.leeway_sec),
+            ),
+        )
+    except (PyJWTError, ValidationError) as err:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid JWT",
+        ) from err
+
+    issuer = jwt_auth_opt.issuer
+    identity_claims: list[Claim] = [
+        UserIdClaim(issuer=issuer, user_id=jwt_claims.sub),
+    ]
+    if username := jwt_claims.username:
+        identity_claims.append(UsernameClaim(issuer=issuer, username=username))
+    if email := jwt_claims.email:
+        identity_claims.append(EmailClaim(issuer=issuer, email=email))
+    if first_name := jwt_claims.given_name:
+        identity_claims.append(FirstNameClaim(issuer=issuer, first_name=first_name))
+    if last_name := jwt_claims.family_name:
+        identity_claims.append(LastNameClaim(issuer=issuer, last_name=last_name))
+    principal = ClaimsIdentity(claims=identity_claims)
+
     return AuthenticationResult(principal=principal)
 
 
