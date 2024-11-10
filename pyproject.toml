@@ -1,0 +1,95 @@
+[project]
+name = "pisaka-demo-01"
+version = "0.1.0"
+description = "Пр иимер структуры проекта"
+authors = [
+    {name = "Dmitry Smirnov", email = "sda97g@gmail.com"},
+]
+dependencies = [
+    "fastapi>=0.115.4",
+    "sqlalchemy>=2.0.36",
+    "dependency-injector>=4.42.0",
+    "pydantic>=2.9.2",
+    "uvicorn>=0.32.0",
+    "aiosqlite>=0.20.0",
+    "aioinject>=0.35.0",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.isort]
+profile = "black"
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "ruff>=0.7.1",
+    "black>=24.10.0",
+    "isort>=5.13.2",
+    "mypy>=1.13.0",
+]
+
+[tool.pdm.scripts]
+lint = { composite = [
+    "ruff check . --fix --show-fixes",
+    "black .",
+    "ruff check . --fix --show-fixes",
+    "mypy .",
+    "isort .",
+] }
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = "tests"
+
+[tool.ruff]
+src = ["src", "tests"]
+lint.select = ["ALL"]
+lint.ignore = [
+    "E501",   # Line Length
+    "A003",   # Class attribute ... is shadowing a python builtin
+    "ANN101",
+    "ANN102",
+    "D",      # pydocstyle
+    "PD",     # pandas-vet
+    "I",      # Isort
+    "INP",
+    "TCH001",
+    "TCH002",
+    "TCH003",
+    "EXE",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "RUF012",  #  Mutable class attributes should be annotated with `typing.ClassVar`
+    "RUF018",  # Avoid assignment expressions in `assert` statements, e.g. `assert (foo := ...) is not None`
+    "TD002",
+    "TD003",
+    "FIX002",
+    "PLR0913",  # Too many arguments in function definition
+    "PERF401",  # Use a list comprehension to create a transformed list
+    "EM101",
+    "TRY003",
+    "G004",  # Logging statement uses f-string
+]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Body",
+    "fastapi.Cookie",
+    "fastapi.Depends",
+    "fastapi.File",
+    "fastapi.Form",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Query",
+    "fastapi.Security",
+]
