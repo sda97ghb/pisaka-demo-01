@@ -1,0 +1,35 @@
+@startuml
+
+package pisaka {
+    package platform {
+        package api {}
+        package db {}
+        package errors {}
+        package security {}
+    }
+    package app {
+        package api {}
+        package api_lib {}
+        package articles {}
+        package authors {}
+        package cli {}
+        package internal_api {}
+        package internal_api_lib {}
+
+        authors --> api_lib
+        authors --> internal_api_lib
+
+        articles --> authors
+
+        api --> authors
+        internal_api --> authors
+    }
+    package config {
+        package di {}
+    }
+
+    app --> platform
+    config --> app
+}
+
+@enduml

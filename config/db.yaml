@@ -1,0 +1,4 @@
+dynaconf_merge: true
+db:
+  url_sync: "sqlite:///db.sqlite"
+  url_async: "sqlite+aiosqlite:///db.sqlite"

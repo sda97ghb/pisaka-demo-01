@@ -2,10 +2,10 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from pisaka.authors.entities import Author
-from pisaka.authors.ids import AuthorId
-from pisaka.authors.repositories import AuthorRepository
-from pisaka.authors.services import DefaultAuthorService
+from pisaka.app.authors.entities import Author
+from pisaka.app.authors.ids import AuthorId
+from pisaka.app.authors.repositories import AuthorRepository
+from pisaka.app.authors.services import DefaultAuthorService
 
 
 class CreateAuthorCommand:

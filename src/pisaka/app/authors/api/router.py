@@ -6,8 +6,8 @@ from fastapi import APIRouter, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from pisaka.authors.ids import AuthorId
-from pisaka.authors.models import AuthorModel
+from pisaka.app.authors.ids import AuthorId
+from pisaka.app.authors.models import AuthorModel
 from pisaka.platform.api import BaseSchema
 
 router = APIRouter(

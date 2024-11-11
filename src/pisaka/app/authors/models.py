@@ -3,8 +3,8 @@ from uuid import UUID
 from sqlalchemy import Boolean, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
-from pisaka.authors.ids import AuthorId
-from pisaka.db import DBModel
+from pisaka.app.authors.ids import AuthorId
+from pisaka.platform.db import DBModel
 
 
 class AuthorModel(DBModel):

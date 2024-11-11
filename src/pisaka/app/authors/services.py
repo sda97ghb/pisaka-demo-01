@@ -4,8 +4,8 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from pisaka.authors.ids import AuthorId
-from pisaka.authors.models import DefaultAuthorModel
+from pisaka.app.authors.ids import AuthorId
+from pisaka.app.authors.models import DefaultAuthorModel
 
 
 class DefaultAuthorService:

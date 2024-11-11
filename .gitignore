@@ -162,5 +162,3 @@ cython_debug/
 .idea/
 
 db.sqlite
-pisaka.json
-pisaka-secrets.json

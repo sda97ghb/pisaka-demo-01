@@ -1,5 +1,5 @@
-from pisaka.authors.ids import AuthorId
-from pisaka.authors.models import AuthorModel
+from pisaka.app.authors.ids import AuthorId
+from pisaka.app.authors.models import AuthorModel
 
 
 class Author:

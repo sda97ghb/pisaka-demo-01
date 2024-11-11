@@ -12,8 +12,8 @@ from jwt import PyJWTError
 from pydantic import BaseModel, ValidationError
 from starlette import status
 
-from security.authentication import JWTAuthenticationOptions
-from security.claims import (
+from pisaka.platform.security.authentication.common import JWTAuthenticationOptions
+from pisaka.platform.security.claims import (
     Claim,
     ClaimsIdentity,
     EmailClaim,

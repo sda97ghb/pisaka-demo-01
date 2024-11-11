@@ -1,0 +1,48 @@
+api:
+  jwt_authentication:
+    public_key: "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCFnu5QVffnlErf8Egsyat0YVMn\nwE6r8IRmsOxKKrR5yWGiNmSkAQVG3RbnSMeDQw1PbGrNXC6TAkENRetwFFoG87is\n0wYxpDovlxhFXa8k92ofoHPIofG6S4yFPWU2MdyISPKHxRveLX/Us9CjN4kiv+9T\ngu1bRQwAnFl+M6+L3QIDAQAB\n-----END PUBLIC KEY-----"
+    audience: "pisaka-backend"
+    issuer: "https://my-sso-instance/realm/our-dudes"
+    algorithm: "RS256"
+    leeway_sec: 60
+internal_api:
+  jwt_authentication:
+    public_key: "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCFnu5QVffnlErf8Egsyat0YVMn\nwE6r8IRmsOxKKrR5yWGiNmSkAQVG3RbnSMeDQw1PbGrNXC6TAkENRetwFFoG87is\n0wYxpDovlxhFXa8k92ofoHPIofG6S4yFPWU2MdyISPKHxRveLX/Us9CjN4kiv+9T\ngu1bRQwAnFl+M6+L3QIDAQAB\n-----END PUBLIC KEY-----"
+    audience: "pisaka-backend"
+    issuer: "https://my-sso-instance/realm/our-dudes"
+    algorithm: "RS256"
+    leeway_sec: 60
+logging:
+  loggers:
+    uvicorn:
+      level: INFO
+      propagate: True
+#      handlers:
+#        - console
+#    uvicorn.error:
+#    uvicorn.access:
+#    uvicorn.asgi:
+#    fastapi:
+#    sqlalchemy:
+#      level: INFO
+    "sqlalchemy.engine":
+      level: INFO
+#    "sqlalchemy.pool":
+#      level: INFO
+#    "sqlalchemy.dialects":
+#      level: INFO
+#    "sqlalchemy.orm":
+#      level: INFO
+  root:
+    handlers:
+      - console
+  handlers:
+    console:
+      class: "logging.StreamHandler"
+      stream: "ext://sys.stdout"
+      level: INFO
+      formatter: console_format
+  formatters:
+    console_format:
+      format: "%(asctime)s %(levelname)-8s %(name)s %(message)s"
+#  disable_existing_loggers: False

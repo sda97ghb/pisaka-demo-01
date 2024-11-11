@@ -1,9 +1,9 @@
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from pisaka.authors.entities import Author
-from pisaka.authors.ids import AuthorId
-from pisaka.authors.models import AuthorModel
+from pisaka.app.authors.entities import Author
+from pisaka.app.authors.ids import AuthorId
+from pisaka.app.authors.models import AuthorModel
 from pisaka.platform.errors import NotFoundError
 
 

@@ -6,11 +6,11 @@ import aioinject
 from aioinject.ext.fastapi import AioInjectMiddleware
 from fastapi import FastAPI
 
-PublicAPIApp = NewType("PublicAPIApp", FastAPI)
+InternalAPIApp = NewType("InternalAPIApp", FastAPI)
 
 
-def create_app(container: aioinject.Container) -> PublicAPIApp:
-    from pisaka import authors
+def create_app(container: aioinject.Container) -> InternalAPIApp:
+    from pisaka.app import authors
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -21,6 +21,6 @@ def create_app(container: aioinject.Container) -> PublicAPIApp:
 
     app.add_middleware(AioInjectMiddleware, container=container)
 
-    app.include_router(authors.api.router)
+    app.include_router(authors.internal_api.router)
 
-    return PublicAPIApp(app)
+    return InternalAPIApp(app)

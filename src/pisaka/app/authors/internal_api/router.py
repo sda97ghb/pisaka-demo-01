@@ -7,18 +7,18 @@ from fastapi import APIRouter, Body, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from pisaka.authors.commands import (
+from pisaka.app.authors.commands import (
     CreateAuthorCommand,
     DeleteAuthorCommand,
     ResetDefaultAuthorCommand,
     SetDefaultAuthorCommand,
     UpdateAuthorCommand,
 )
-from pisaka.authors.ids import AuthorId
-from pisaka.authors.models import AuthorModel
-from pisaka.authors.services import DefaultAuthorService
-from pisaka.internal_api_lib.authentication import Authentication
+from pisaka.app.authors.ids import AuthorId
+from pisaka.app.authors.models import AuthorModel
+from pisaka.app.authors.services import DefaultAuthorService
 from pisaka.platform.api import BaseSchema
+from pisaka.platform.security.authentication.internal_api import Authentication
 
 router = APIRouter(
     prefix="/authors",
