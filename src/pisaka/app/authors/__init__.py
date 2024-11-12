@@ -7,6 +7,7 @@ from .commands import (
     UpdateAuthorCommand,
 )
 from .entities import Author
+from .ids import AuthorId
 from .models import AuthorModel
 from .repositories import AuthorRepository
 from .services import DefaultAuthorService
@@ -14,6 +15,7 @@ from .services import DefaultAuthorService
 __all__ = [
     "api",
     "internal_api",
+    "AuthorId",
     "AuthorModel",
     "Author",
     "AuthorRepository",
