@@ -73,10 +73,13 @@ async def create_author(
     name: Annotated[str, Body(embed=True)],
     is_real_person: Annotated[bool, Body(embed=True)],
     create_author_command: Annotated[CreateAuthorCommand, Inject],
+    authentication: Authentication,
 ) -> CreateAuthorResponseSchema:
     author = await create_author_command.execute(
         name=name,
         is_real_person=is_real_person,
+        principal=authentication.principal,
+        agent=authentication.agent,
     )
     return CreateAuthorResponseSchema(author=AuthorSchema.model_validate(author))
 
@@ -91,8 +94,14 @@ async def update_author(
     author_id: Annotated[AuthorId, Path(description="ID автора")],
     name: Annotated[str, Body(embed=True)],
     update_author_command: Annotated[UpdateAuthorCommand, Inject],
+    authentication: Authentication,
 ) -> UpdateAuthorResponseSchema:
-    author = await update_author_command.execute(author_id=author_id, new_name=name)
+    author = await update_author_command.execute(
+        author_id=author_id,
+        new_name=name,
+        principal=authentication.principal,
+        agent=authentication.agent,
+    )
     return UpdateAuthorResponseSchema(author=AuthorSchema.model_validate(author))
 
 

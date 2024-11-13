@@ -6,7 +6,7 @@ from uuid import UUID
 import jwt
 from aioinject import Inject
 from aioinject.ext.fastapi import inject
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWTError
 from pydantic import BaseModel, ValidationError
@@ -14,6 +14,9 @@ from starlette import status
 
 from pisaka.platform.security.authentication.common import JWTAuthenticationOptions
 from pisaka.platform.security.claims import (
+    ISSUER_LOCAL_AUTHORITY,
+    AgentNameClaim,
+    AgentPlatformClaim,
     Claim,
     ClaimsIdentity,
     EmailClaim,
@@ -22,17 +25,21 @@ from pisaka.platform.security.claims import (
 
 
 class _JWTClaimsSchema(BaseModel):
+    iss: str
     sub: str
     email: str | None
+    azp: str | None
 
 
 @dataclass
 class AuthenticationResult:
     principal: ClaimsIdentity
+    agent: ClaimsIdentity
 
 
 @inject
 async def _authenticate(
+    request: Request,
     http_cred: Annotated[
         HTTPAuthorizationCredentials,
         Depends(
@@ -70,15 +77,27 @@ async def _authenticate(
             detail="Invalid JWT",
         ) from err
 
-    issuer = jwt_auth_opt.issuer
-    identity_claims: list[Claim] = [
-        UserIdClaim(issuer=issuer, user_id=UUID(jwt_claims.sub)),
+    jwt_issuer = jwt_claims.iss
+
+    principal_claims: list[Claim] = [
+        UserIdClaim(issuer=jwt_issuer, user_id=UUID(jwt_claims.sub)),
     ]
     if email := jwt_claims.email:
-        identity_claims.append(EmailClaim(issuer=issuer, email=email))
-    principal = ClaimsIdentity(claims=identity_claims)
+        principal_claims.append(EmailClaim(issuer=jwt_issuer, email=email))
+    principal = ClaimsIdentity(claims=principal_claims)
 
-    return AuthenticationResult(principal=principal)
+    agent_claims: list[Claim] = []
+    if user_agent := request.headers.get("User-Agent"):
+        agent_claims.append(
+            AgentPlatformClaim(issuer=ISSUER_LOCAL_AUTHORITY, platform_name=user_agent),
+        )
+    if authorized_party := jwt_claims.azp:
+        agent_claims.append(
+            AgentNameClaim(issuer=jwt_issuer, agent_name=authorized_party),
+        )
+    agent = ClaimsIdentity(claims=agent_claims)
+
+    return AuthenticationResult(principal=principal, agent=agent)
 
 
 Authentication = Annotated[AuthenticationResult, Depends(_authenticate)]

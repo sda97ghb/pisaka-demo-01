@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import Final, TypeVar
 from uuid import UUID
 
-ISSUER_LOCAL_AUTHORITY = "LOCAL AUTHORITY"
+ISSUER_LOCAL_AUTHORITY: Final[str] = "LOCAL AUTHORITY"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,6 +33,29 @@ class FirstNameClaim(Claim):
 @dataclass(frozen=True, kw_only=True)
 class LastNameClaim(Claim):
     last_name: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class PisakaRoleClaim(Claim):
+    role: str
+
+
+AGENT_NAME_LOCAL_CLI: Final[str] = "LOCAL CLI"
+AGENT_NAME_TESTS: Final[str] = "TESTS"
+
+
+@dataclass(frozen=True, kw_only=True)
+class AgentNameClaim(Claim):
+    agent_name: str
+
+
+AGENT_PLATFORM_NAME_LOCAL_CLI: Final[str] = "LOCAL CLI"
+AGENT_PLATFORM_NAME_PYTEST: Final[str] = "PYTEST"
+
+
+@dataclass(frozen=True, kw_only=True)
+class AgentPlatformClaim(Claim):
+    platform_name: str
 
 
 ClaimT = TypeVar("ClaimT", bound=Claim)

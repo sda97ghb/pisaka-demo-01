@@ -61,6 +61,13 @@ def jwt() -> None:
             "email": "j.doe@mail.com",
             "given_name": "John",
             "family_name": "Doe",
+            "client_roles": {
+                "pisaka-backend": [
+                    "journalist",
+                    "editor",
+                    "chief",
+                ],
+            },
         },
         key=config.internal_api.jwt_authentication.private_key,
         algorithm=config.internal_api.jwt_authentication.algorithm,

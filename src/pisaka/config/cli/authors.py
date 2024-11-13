@@ -29,12 +29,16 @@ def create(
     """Создать автора"""
     from pisaka.app.authors import CreateAuthorCommand
     from pisaka.config.cli.authors_utils import repr_author_as_table
+    from pisaka.platform.security.authentication.cli import authenticate_cli
 
     async def main(ctx: aioinject.InjectionContext) -> None:
         create_author_command = await ctx.resolve(CreateAuthorCommand)
+        authentication = authenticate_cli()
         author = await create_author_command.execute(
             name=name,
             is_real_person=not is_fake,
+            principal=authentication.principal,
+            agent=authentication.agent,
         )
         table = repr_author_as_table(author, "Created author")
         print(table)
@@ -50,12 +54,16 @@ def update(
     """Обновить автора"""
     from pisaka.app.authors import AuthorId, UpdateAuthorCommand
     from pisaka.config.cli.authors_utils import repr_author_as_table
+    from pisaka.platform.security.authentication.cli import authenticate_cli
 
     async def main(ctx: aioinject.InjectionContext) -> None:
         update_author_command = await ctx.resolve(UpdateAuthorCommand)
+        authentication = authenticate_cli()
         author = await update_author_command.execute(
             author_id=AuthorId(author_id),
             new_name=new_name,
+            principal=authentication.principal,
+            agent=authentication.agent,
         )
         table = repr_author_as_table(author, "Updated author")
         print(table)
