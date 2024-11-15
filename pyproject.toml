@@ -81,8 +81,10 @@ lint.ignore = [
     "PLR0913",  # Too many arguments in function definition
     "PERF401",  # Use a list comprehension to create a transformed list
     "EM101",
+    "EM102",
     "TRY003",
     "G004",  # Logging statement uses f-string
+    "PERF403",
 ]
 
 [tool.ruff.lint.flake8-bugbear]

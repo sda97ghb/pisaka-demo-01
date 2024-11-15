@@ -14,7 +14,7 @@ InternalAPIApp = NewType("InternalAPIApp", FastAPI)
 
 
 def create_app(container: aioinject.Container) -> InternalAPIApp:
-    from pisaka.app import authors
+    from pisaka.app.internal_api import articles, authors
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -25,7 +25,8 @@ def create_app(container: aioinject.Container) -> InternalAPIApp:
 
     app.add_middleware(AioInjectMiddleware, container=container)
 
-    app.include_router(authors.internal_api.router)
+    app.include_router(authors.router)
+    app.include_router(articles.router)
 
     async def handle_authorization_error(_: Request, exception: Exception) -> Response:
         assert isinstance(exception, AuthorizationError)  # noqa: S101

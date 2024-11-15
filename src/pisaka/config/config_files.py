@@ -1,5 +1,5 @@
 from dynaconf import Dynaconf  # type:ignore[import-untyped]
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from pisaka.platform.logging import LoggingConfig
 
@@ -26,6 +26,10 @@ class InternalAPI(BaseModel):
     jwt_authentication: JWT
 
 
+class Security(BaseModel):
+    agent_name_admin_panel: str
+
+
 class Config(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -33,6 +37,7 @@ class Config(BaseModel):
     db: DB
     api: API
     internal_api: InternalAPI
+    security: Security
 
 
 def load_raw_config() -> Dynaconf:
@@ -43,5 +48,12 @@ def load_raw_config() -> Dynaconf:
     )
 
 
+class InvalidConfigError(Exception):
+    pass
+
+
 def load_config() -> Config:
-    return Config.model_validate(load_raw_config())
+    try:
+        return Config.model_validate(load_raw_config())
+    except ValidationError as err:
+        raise InvalidConfigError(f"Config is invalid: {err}") from err

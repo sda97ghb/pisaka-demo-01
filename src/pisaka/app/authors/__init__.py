@@ -1,4 +1,4 @@
-from . import api, internal_api
+from . import api
 from .commands import (
     CreateAuthorCommand,
     DeleteAuthorCommand,
@@ -14,7 +14,6 @@ from .services import DefaultAuthorService
 
 __all__ = [
     "api",
-    "internal_api",
     "AuthorId",
     "AuthorModel",
     "Author",

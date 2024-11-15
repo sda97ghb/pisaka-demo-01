@@ -11,13 +11,13 @@ class AuthorRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get(self, id_: AuthorId) -> Author:
+    async def get(self, author_id: AuthorId) -> Author:
         result = await self._session.execute(
-            select(AuthorModel).where(AuthorModel.id == id_).with_for_update(),
+            select(AuthorModel).where(AuthorModel.id == author_id).with_for_update(),
         )
         model: AuthorModel | None = result.scalar_one_or_none()
         if model is None:
-            raise NotFoundError(entity_type=Author, key=id_)
+            raise NotFoundError(entity_type=Author, key=author_id)
         return Author(model=model)
 
     async def save(self, author: Author) -> None:

@@ -11,7 +11,9 @@ def create_base_di_container(config: Config) -> aioinject.Container:
     container.register(aioinject.Object(container, aioinject.Container))
     container.register(aioinject.Object(config))
     _register_db(container)
+    _register_security(container)
     _register_authors(container)
+    _register_articles(container)
     return container
 
 
@@ -48,6 +50,16 @@ def _register_db(container: aioinject.Container) -> None:
     container.register(aioinject.Scoped(_create_async_session))
 
 
+def _register_security(container: aioinject.Container) -> None:
+    from pisaka.platform.security.permissions import (
+        AlmightyLocalCliPermission,
+        AlmightyTestsPermission,
+    )
+
+    container.register(aioinject.Scoped(AlmightyLocalCliPermission))
+    container.register(aioinject.Scoped(AlmightyTestsPermission))
+
+
 def _register_authors(container: aioinject.Container) -> None:
     from pisaka.app.authors import (
         AuthorRepository,
@@ -58,6 +70,12 @@ def _register_authors(container: aioinject.Container) -> None:
         SetDefaultAuthorCommand,
         UpdateAuthorCommand,
     )
+    from pisaka.app.authors.security import EditAuthorsPermission, ListAuthorsPermission
+
+    def _create_list_authors_permission(config: Config) -> ListAuthorsPermission:
+        return ListAuthorsPermission(
+            agent_name_admin_panel=config.security.agent_name_admin_panel,
+        )
 
     container.register(aioinject.Scoped(AuthorRepository))
     container.register(aioinject.Scoped(CreateAuthorCommand))
@@ -66,3 +84,29 @@ def _register_authors(container: aioinject.Container) -> None:
     container.register(aioinject.Scoped(DefaultAuthorService))
     container.register(aioinject.Scoped(SetDefaultAuthorCommand))
     container.register(aioinject.Scoped(ResetDefaultAuthorCommand))
+    container.register(aioinject.Scoped(_create_list_authors_permission))
+    container.register(aioinject.Scoped(EditAuthorsPermission))
+
+
+def _register_articles(container: aioinject.Container) -> None:
+    from pisaka.app.articles.commands import (
+        CreateArticleDraftCommand,
+        PublishArticleCommand,
+        UpdateArticleDraftHeadlineCommand,
+    )
+    from pisaka.app.articles.repositories import (
+        ArticleDraftRepository,
+        ArticleRepository,
+    )
+    from pisaka.app.articles.security import (
+        ListArticleDraftsPermission,
+        PublishArticlePermission,
+    )
+
+    container.register(aioinject.Scoped(CreateArticleDraftCommand))
+    container.register(aioinject.Scoped(UpdateArticleDraftHeadlineCommand))
+    container.register(aioinject.Scoped(PublishArticleCommand))
+    container.register(aioinject.Scoped(ArticleRepository))
+    container.register(aioinject.Scoped(ArticleDraftRepository))
+    container.register(aioinject.Scoped(ListArticleDraftsPermission))
+    container.register(aioinject.Scoped(PublishArticlePermission))

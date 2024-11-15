@@ -4,12 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pisaka.app.authors.entities import Author
 from pisaka.app.authors.ids import AuthorId
-from pisaka.app.authors.permissions import (
-    AlmightyLocalCliPermission,
-    AlmightyTestsPermission,
-    EditAuthorsPermission,
-)
 from pisaka.app.authors.repositories import AuthorRepository
+from pisaka.app.authors.security import EditAuthorsPermission
 from pisaka.app.authors.services import DefaultAuthorService
 from pisaka.platform.security.authorization import AuthorizationError
 from pisaka.platform.security.claims import (
@@ -18,6 +14,10 @@ from pisaka.platform.security.claims import (
     AgentNameClaim,
     ClaimsIdentity,
     PisakaRoleClaim,
+)
+from pisaka.platform.security.permissions import (
+    AlmightyLocalCliPermission,
+    AlmightyTestsPermission,
 )
 from pisaka.platform.security.roles import PisakaRole
 

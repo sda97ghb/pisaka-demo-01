@@ -3,17 +3,7 @@ from pisaka.platform.security.claims import (
     AGENT_NAME_TESTS,
     AgentNameClaim,
     ClaimsIdentity,
-    PisakaRoleClaim,
 )
-from pisaka.platform.security.roles import PisakaRole
-
-
-class EditAuthorsPermission:
-    async def evaluate(self, principal: ClaimsIdentity) -> bool:
-        for role_claim in principal.find_all(PisakaRoleClaim):
-            if role_claim.role == PisakaRole.CHIEF:
-                return True
-        return False
 
 
 class AlmightyLocalCliPermission:

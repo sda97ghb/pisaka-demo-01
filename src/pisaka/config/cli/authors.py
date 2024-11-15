@@ -17,6 +17,32 @@ cli = Typer(
 )
 
 
+@cli.command(
+    name="list",
+)
+def list_() -> None:
+    """Вывести список авторов."""
+    from rich.table import Table
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from pisaka.app.authors import AuthorModel
+
+    async def main(ctx: aioinject.InjectionContext) -> None:
+        session = await ctx.resolve(AsyncSession)
+        result = await session.execute(select(AuthorModel))
+        table = Table("ID", "Name", "Is real person?", title="Authors")
+        for author in result.scalars().all():
+            table.add_row(
+                str(author.id),
+                author.name,
+                "+" if author.is_real_person else "-",
+            )
+        print(table)
+
+    _run(main)
+
+
 @cli.command()
 def create(
     *,
@@ -26,7 +52,7 @@ def create(
         Option(help="Вымышленный персонаж?", is_flag=True),
     ] = False,
 ) -> None:
-    """Создать автора"""
+    """Создать автора."""
     from pisaka.app.authors import CreateAuthorCommand
     from pisaka.config.cli.authors_utils import repr_author_as_table
     from pisaka.platform.security.authentication.cli import authenticate_cli
@@ -51,7 +77,7 @@ def update(
     author_id: Annotated[UUID, Argument(help="ID автора", show_default=False)],
     new_name: Annotated[str, Option("--name", help="Новое имя", prompt=True)],
 ) -> None:
-    """Обновить автора"""
+    """Обновить автора."""
     from pisaka.app.authors import AuthorId, UpdateAuthorCommand
     from pisaka.config.cli.authors_utils import repr_author_as_table
     from pisaka.platform.security.authentication.cli import authenticate_cli
