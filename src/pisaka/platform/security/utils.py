@@ -1,7 +1,16 @@
 from collections.abc import Iterable
+from typing import Final
 from uuid import UUID
 
-from pisaka.platform.security.claims import ClaimsIdentity, PisakaRoleClaim, UserIdClaim
+from pisaka.platform.security.claims import (
+    AGENT_NAME_TESTS,
+    AGENT_PLATFORM_NAME_PYTEST,
+    AgentNameClaim,
+    AgentPlatformClaim,
+    ClaimsIdentity,
+    PisakaRoleClaim,
+    UserIdClaim,
+)
 
 
 def has_any_role(principal: ClaimsIdentity, roles: Iterable[str]) -> bool:
@@ -31,3 +40,12 @@ def get_user_id(principal: ClaimsIdentity) -> UUID:
     if user_id_claim is None:
         raise NoUserIdClaimError
     return user_id_claim.user_id
+
+
+PRINCIPAL_DOES_NOT_MATTER: Final[ClaimsIdentity] = ClaimsIdentity(claims=[])
+AGENT_FOR_TESTS: Final[ClaimsIdentity] = ClaimsIdentity(
+    claims=[
+        AgentNameClaim(agent_name=AGENT_NAME_TESTS),
+        AgentPlatformClaim(platform_name=AGENT_PLATFORM_NAME_PYTEST),
+    ],
+)

@@ -34,5 +34,5 @@ class Author:
     def is_real_person(self) -> bool:
         return self._model.is_real_person
 
-    def set_name(self, name: str) -> None:
-        self._model.name = name
+    def set_name(self, new_name: str) -> None:
+        self._model.name = new_name
