@@ -1,4 +1,8 @@
-from pisaka.platform.security.claims import ClaimsIdentity, PisakaRoleClaim
+from pisaka.platform.security.claims import (
+    AgentNameClaim,
+    ClaimsIdentity,
+    PisakaRoleClaim,
+)
 from pisaka.platform.security.roles import PisakaRole
 from pisaka.platform.security.utils import has_any_role
 
@@ -7,14 +11,6 @@ class ListAuthorsPermission:
     def __init__(self, agent_name_admin_panel: str) -> None:
         self._agent_name_admin_panel = agent_name_admin_panel
 
-    async def evaluate(self, principal: ClaimsIdentity) -> bool:
-        return has_any_role(
-            principal=principal,
-            roles=[PisakaRole.JOURNALIST, PisakaRole.EDITOR, PisakaRole.CHIEF],
-        )
-
-    """
-    TODO: придумать, как передавать с фронта agent_name и заменить на следующий код
     async def evaluate(self, principal: ClaimsIdentity, agent: ClaimsIdentity) -> bool:
         agent_name_claim = agent.find_first(AgentNameClaim)
         agent_name = agent_name_claim.agent_name if agent_name_claim else None
@@ -24,7 +20,6 @@ class ListAuthorsPermission:
                 roles=[PisakaRole.JOURNALIST, PisakaRole.EDITOR, PisakaRole.CHIEF],
             )
         return False
-    """
 
 
 class EditAuthorsPermission:

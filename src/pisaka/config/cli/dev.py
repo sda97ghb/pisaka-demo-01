@@ -56,7 +56,7 @@ def jwt() -> None:
             "nbf": now.timestamp(),
             "exp": (now + timedelta(minutes=30)).timestamp(),
             "aud": [config.internal_api.jwt_authentication.audience],
-            "azp": "pisaka-frontend",
+            "azp": config.security.agent_name_admin_panel,
             "username": "j.doe",
             "email": "j.doe@mail.com",
             "given_name": "John",

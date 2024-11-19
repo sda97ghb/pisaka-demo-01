@@ -57,6 +57,7 @@ async def get_authors_list(
 ) -> AuthorsListSchema:
     can_list_authors = await list_authors_permission.evaluate(
         principal=authentication.principal,
+        agent=authentication.agent,
     )
     if not can_list_authors:
         raise AuthorizationError
