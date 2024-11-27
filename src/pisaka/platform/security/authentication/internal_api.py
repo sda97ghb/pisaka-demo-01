@@ -60,6 +60,28 @@ async def _authenticate(
     ],
     jwt_auth_opt: Annotated[JWTAuthenticationOptions, Inject],
 ) -> AuthenticationResult:
+    # Если нужна поддержка нескольких Identity Provider'ов, то можно
+    # для каждого из них сделать по одной функции с кодом аналогичным
+    # написанному ниже, а в этой функции сделать подобным образом:
+    # try:
+    #     return _authenticate_as_identity_provider_1()
+    # except:
+    #     pass
+    # try:
+    #     return _authenticate_as_identity_provider_2()
+    # except:
+    #     pass
+    # try:
+    #     return _authenticate_as_identity_provider_3()
+    # except:
+    #     pass
+    # raise AuthenticationError
+    #
+    # Также стоит помнить о JWT клейме iss, который обычно содержит url
+    # сервиса, создавшего токен, и выбирать вариант аутентификации
+    # в зависимости от него. Тем не менее этот клейм опциональный
+    # и некоторые сервисы могут не добавлять его в JWT
+
     try:
         jwt_claims = _JWTClaimsSchema.model_validate(
             jwt.decode(
@@ -106,6 +128,25 @@ async def _authenticate(
         for role in pisaka_roles:
             principal_claims.append(PisakaRoleClaim(issuer=jwt_issuer, role=role))
     principal = ClaimsIdentity(claims=principal_claims)
+
+    # Не все клеймы identity должны быть из одного источника. При необходимости
+    # можно, например, часть информации взять из локальной БД
+    #
+    # async def get_roles(user_id) -> Sequence[str]:
+    #     result = await session.execute(
+    #         select(PisakaRoleToUserModel.role_name)
+    #         .where(PisakaRoleToUserModel.user_id == user_id)
+    #     )
+    #     return result.scalars().all()
+    #
+    # for role in await get_roles(user_id=jwt_claims.sub):
+    #     principal_claims.append(
+    #         PisakaRoleClaim(
+    #             # Обязательно указываем, что этот клейм мы выдали самостоятельно
+    #             issuer=ISSUER_LOCAL_AUTHORITY,
+    #             role=role,
+    #         ),
+    #     )
 
     agent_claims: list[Claim] = []
     if user_agent := request.headers.get("User-Agent"):

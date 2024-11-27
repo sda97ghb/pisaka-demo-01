@@ -1,0 +1,24 @@
+@startuml
+
+left to right direction
+
+actor ResourceOwner
+actor ResourceServer
+actor IdentityIssuer
+actor Principal
+actor Agent
+
+ResourceOwner -> (Создает ресурсы)
+ResourceOwner -> (Настраивает доступы к своим ресурсам)
+
+ResourceServer -> (Хранит ресурсы)
+ResourceServer -> (Авторизует доступ к ресурсам)
+
+IdentityIssuer -> (Собирает информацию о других участниках)
+IdentityIssuer -> (Предоставляет информацию о других участниках в виде подписанных токенов)
+
+Principal -> (Выступает инициатором действий с ресурсами)
+
+Agent -> (Осуществляет действия с ресурсами по поручению принципала)
+
+@enduml
